@@ -1,14 +1,14 @@
 import { useEffect } from "react";
-import { random } from "../functions/random";
-import { IHero, IProjectile } from "../types/types";
-import { isHitHero } from "../functions/isHitHero";
+import { random } from "@/functions/random";
+import { IHero, IProjectile } from "@/types/types";
+import { isHitHero } from "@/functions/isHitHero";
 
 export const useProjectiles = (
   width: number,
   height: number,
-  hero1: IHero,
-  hero2: IHero
+  heroes: IHero[]
 ) => {
+  const [hero1, hero2] = heroes;
   const shootTime = 100;
   const projectiles: IProjectile[] = [];
   const shootProjectile = (shooter: IHero, target: IHero) => {
@@ -20,8 +20,6 @@ export const useProjectiles = (
       y: shooter.y + Math.sin(angle) * offset,
       speedX: Math.cos(angle) * speed,
       speedY: Math.sin(angle) * speed,
-      radius: 10,
-      color: "black",
     };
     projectiles.push(projectile);
   };

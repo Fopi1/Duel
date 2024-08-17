@@ -3,12 +3,11 @@ export interface IHero {
   x: number;
   speed: number;
   radius: number;
+  color: string;
 }
 export interface IProjectile {
   x: number;
   y: number;
   speedX: number;
   speedY: number;
-  radius: number;
-  color: string;
 }

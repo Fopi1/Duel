@@ -1,0 +1,21 @@
+export const drawGameBoard = (
+  context: CanvasRenderingContext2D,
+  width: number,
+  height: number
+) => {
+  context.fillStyle = "grey";
+  context.fillRect(0, 0, width, height);
+};
+
+export const drawHero = (
+  context: CanvasRenderingContext2D,
+  x: number,
+  y: number,
+  size: number,
+  color: string
+) => {
+  context.beginPath();
+  context.arc(x, y, size, 0, 2 * Math.PI, false);
+  context.fillStyle = color;
+  context.fill();
+};

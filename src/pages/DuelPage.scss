@@ -1,9 +1,11 @@
-.app {
-  background: #000;
-  width: 100%;
-  height: 100dvh;
+.duel-page {
+  max-width: 1366px;
+  height: 100%;
   display: flex;
   flex-direction: column;
   align-items: center;
   justify-content: flex-end;
+}
+.canvas-wrapper {
+  position: relative;
 }

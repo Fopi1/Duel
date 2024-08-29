@@ -3,9 +3,6 @@ export const checkWallsCollision = (
   speed: number,
   radius: number,
   canvasHeight: number
-): number => {
-  if (heroY + speed > canvasHeight - radius || heroY + speed < radius) {
-    return -speed;
-  }
-  return speed;
+): boolean => {
+  return heroY + speed > canvasHeight - radius || heroY + speed < radius;
 };

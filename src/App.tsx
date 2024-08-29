@@ -1,10 +1,13 @@
-import Canvas from "./Canvas/Canvas";
 import "./App.scss";
+
+import DuelPage from "./pages/DuelPage";
 
 const App = () => {
   return (
     <div className="app">
-      <Canvas />
+      <div className="app__inner">
+        <DuelPage />
+      </div>
     </div>
   );
 };

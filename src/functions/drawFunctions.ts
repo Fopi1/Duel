@@ -23,10 +23,11 @@ export const drawHero = (
 export const drawProjectile = (
   context: CanvasRenderingContext2D,
   x: number,
-  y: number
+  y: number,
+  color: string
 ) => {
   context.beginPath();
   context.arc(x, y, 10, 0, 2 * Math.PI, false);
-  context.fillStyle = "black";
+  context.fillStyle = color;
   context.fill();
 };

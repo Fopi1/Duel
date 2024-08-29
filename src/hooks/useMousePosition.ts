@@ -3,17 +3,16 @@ import { useEffect, useRef } from "react";
 export const useMousePosition = (
   canvasRef: React.RefObject<HTMLCanvasElement>
 ) => {
-  const mousePosition = useRef({ mouseX: 0, mouseY: 0 });
-
+  const mousePositionRef = useRef({ mouseX: 0, mouseY: 0 });
+  const mousePosition = mousePositionRef.current;
+  const updateMousePosition = (event: MouseEvent) => {
+    const rect = canvasRef.current?.getBoundingClientRect();
+    if (rect) {
+      mousePosition.mouseX = event.clientX - rect.left;
+      mousePosition.mouseY = event.clientY - rect.top;
+    }
+  };
   useEffect(() => {
-    const updateMousePosition = (event: MouseEvent) => {
-      const rect = canvasRef.current?.getBoundingClientRect();
-      if (rect) {
-        mousePosition.current.mouseX = event.clientX - rect.left;
-        mousePosition.current.mouseY = event.clientY - rect.top;
-      }
-    };
-
     const canvas = canvasRef.current;
     if (canvas) {
       canvas.addEventListener("mousemove", updateMousePosition);
@@ -24,7 +23,6 @@ export const useMousePosition = (
         canvas.removeEventListener("mousemove", updateMousePosition);
       }
     };
-  }, [canvasRef, mousePosition]);
-
-  return mousePosition;
+  }, [canvasRef]);
+  return { mousePosition };
 };

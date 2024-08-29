@@ -1,54 +1,106 @@
-import { useEffect } from "react";
-import { random } from "@/functions/random";
+import { Dispatch, SetStateAction, useContext, useEffect, useRef } from "react";
 import { IHero, IProjectile } from "@/types/types";
-import { isHitHero } from "@/functions/isHitHero";
+import { HeroHitContext } from "@/contexts/HeroHitContext";
+import { ColorContext } from "@/contexts/ColorContext";
+import { IHeroHit } from "@/types/context";
+import { ShootDelayContext } from "@/contexts/FiringDelayContext";
 
 export const useProjectiles = (
   width: number,
   height: number,
   heroes: IHero[]
 ) => {
-  const [hero1, hero2] = heroes;
-  const shootTime = 100;
-  const projectiles: IProjectile[] = [];
-  const shootProjectile = (shooter: IHero, target: IHero) => {
-    const angle = Math.atan2(target.y - shooter.y, target.x - shooter.x);
-    const speed = 10;
-    const offset = shooter.radius + 5;
-    const projectile: IProjectile = {
+  const heroHitContext = useContext(HeroHitContext);
+  const colorContext = useContext(ColorContext);
+  const shootDelayContext = useContext(ShootDelayContext);
+  if (!heroHitContext || !colorContext || !shootDelayContext) {
+    throw new Error("ORA");
+  }
+  const { setHeroesHits } = heroHitContext;
+  const { projectileColor } = colorContext;
+  const { shootDelays } = shootDelayContext;
+
+  const { hero1ProjectileColor, hero2ProjectileColor } = projectileColor;
+
+  const projectilesRef = useRef<IProjectile[]>([]);
+  const projectiles = projectilesRef.current;
+
+  const createProjectile = (
+    shooter: IHero,
+    angle: number,
+    speed: number,
+    offset: number
+  ) => {
+    return {
       x: shooter.x + Math.cos(angle) * offset,
       y: shooter.y + Math.sin(angle) * offset,
       speedX: Math.cos(angle) * speed,
       speedY: Math.sin(angle) * speed,
+      color: shooter.id === 0 ? hero1ProjectileColor : hero2ProjectileColor,
+      shooter: shooter,
     };
+  };
+  const shootProjectile = (shooter: IHero, target: IHero) => {
+    const angle = Math.atan2(target.y - shooter.y, target.x - shooter.x);
+    const speed = 10;
+    const offset = shooter.radius + 5;
+    const projectile = createProjectile(shooter, angle, speed, offset);
     projectiles.push(projectile);
   };
-  const randomShoot = () => {
-    const shooter = random(0, 1) === 1 ? hero1 : hero2;
-    const target = shooter === hero1 ? hero2 : hero1;
-    shootProjectile(shooter, target);
-    setTimeout(randomShoot, shootTime);
+  const hero1Shoot = () => {
+    shootProjectile(heroes[0], heroes[1]);
+  };
+  const hero2Shoot = () => {
+    shootProjectile(heroes[1], heroes[0]);
   };
   const moveProjectiles = () => {
-    projectiles.forEach((projectile, index) => {
+    projectiles.forEach((projectile) => {
       projectile.x += projectile.speedX;
       projectile.y += projectile.speedY;
-
+    });
+  };
+  const removeProjectile = () => {
+    projectiles.forEach((projectile, index) => {
       if (
         projectile.x < 0 ||
         projectile.x > width ||
         projectile.y < 0 ||
         projectile.y > height ||
-        isHitHero(projectile, hero1) ||
-        isHitHero(projectile, hero2)
+        isHitHero(projectile, setHeroesHits) ||
+        isHitHero(projectile, setHeroesHits)
       ) {
         projectiles.splice(index, 1);
       }
     });
   };
+  const isHitHero = (
+    projectile: IProjectile,
+    setHeroesHits: Dispatch<SetStateAction<IHeroHit>>
+  ): boolean => {
+    return heroes.some((hero) => {
+      const distance = Math.sqrt(
+        Math.pow(projectile.x - hero.x, 2) + Math.pow(projectile.y - hero.y, 2)
+      );
+      const hit = distance < hero.radius;
+      if (hit) {
+        setHeroesHits((prev) => ({
+          ...prev,
+          hero1Hit: hero.id === 0 ? prev.hero1Hit + 1 : prev.hero1Hit,
+          hero2Hit: hero.id === 1 ? prev.hero2Hit + 1 : prev.hero2Hit,
+        }));
+      }
+      return hit;
+    });
+  };
   useEffect(() => {
-    randomShoot();
-  });
+    const hero1Timer = setInterval(hero1Shoot, shootDelays.hero1ShootDelay);
+    const hero2Timer = setInterval(hero2Shoot, shootDelays.hero2ShootDelay);
 
-  return { projectiles, moveProjectiles };
+    return () => {
+      clearInterval(hero1Timer);
+      clearInterval(hero2Timer);
+    };
+  }, [projectileColor, heroes, shootDelays]);
+
+  return { projectiles, moveProjectiles, removeProjectile };
 };

@@ -1,64 +1,73 @@
-import { useEffect } from "react";
+import { useContext, useEffect } from "react";
 import {
   drawGameBoard,
   drawHero,
   drawProjectile,
 } from "@/functions/drawFunctions";
-import { checkWallsCollision } from "@/functions/checkWallsCollision";
-import { IHero, IProjectile } from "@/types/types";
-import { updateMousePosition } from "@/functions/updateMousePosition";
-import { checkMouseCollision } from "@/functions/checkMouseCollision";
+import { IHero, IProjectile, MousePosition } from "@/types/types";
+import { checkCollision } from "@/functions/checkCollision";
+import { checkHeroClick } from "@/functions/checkHeroClick";
+import { ColorContext } from "@/contexts/ColorContext";
+import { HeroClickContext } from "@/contexts/HeroClickContext";
+import { HeroSpeedContext } from "@/contexts/HeroSpeedContext";
 
 export const useCanvasAnimation = (
   canvasRef: React.RefObject<HTMLCanvasElement>,
   heroes: IHero[],
+  moveProjectiles: () => void,
+  removeProjectile: () => void,
   projectiles: IProjectile[],
-  moveProjectiles: () => void
+  mousePosition: MousePosition
 ) => {
-  const mousePosition = { mouseX: 0, mouseY: 0 };
+  const colorContext = useContext(ColorContext);
+  const heroClickContext = useContext(HeroClickContext);
+  const heroSpeedContext = useContext(HeroSpeedContext);
+
+  if (!colorContext || !heroClickContext || !heroSpeedContext) {
+    throw new Error("pizdec");
+  }
+
+  const { setIsHeroClicked } = heroClickContext;
 
   useEffect(() => {
     const canvas = canvasRef.current!;
     const context = canvas.getContext("2d")!;
 
-    const handleMouseMove = (event: MouseEvent) => {
-      updateMousePosition(event, mousePosition, canvas);
+    const handleMouseClick = () => {
+      checkHeroClick(heroes, mousePosition, setIsHeroClicked);
     };
-
-    canvas.addEventListener("mousemove", handleMouseMove);
+    canvas.addEventListener("mousedown", handleMouseClick);
 
     const animate = () => {
       requestAnimationFrame(animate);
       context.clearRect(0, 0, canvas.width, canvas.height);
       drawGameBoard(context, canvas.width, canvas.height);
 
-      heroes.forEach((hero: IHero) => {
-        hero.speed = checkWallsCollision(
+      heroes.forEach((hero) => {
+        const isCollision = checkCollision(
+          hero.x,
           hero.y,
           hero.speed,
           hero.radius,
-          canvas.height
-        );
-        hero.speed = checkMouseCollision(
-          hero.x,
-          hero.y,
           mousePosition.mouseX,
           mousePosition.mouseY,
-          hero.speed,
-          hero.radius
+          canvas.height
         );
+        hero.speed = isCollision ? -hero.speed : hero.speed;
         hero.y += hero.speed;
         drawHero(context, hero.x, hero.y, hero.radius, hero.color);
       });
 
       projectiles.forEach((projectile) => {
-        drawProjectile(context, projectile.x, projectile.y);
+        drawProjectile(context, projectile.x, projectile.y, projectile.color);
       });
       moveProjectiles();
+      removeProjectile();
     };
     animate();
     return () => {
-      canvas.removeEventListener("mousemove", handleMouseMove);
+      cancelAnimationFrame(requestAnimationFrame(animate));
+      canvas.removeEventListener("mousedown", handleMouseClick);
     };
   }, []);
 };

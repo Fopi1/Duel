@@ -1,25 +1,17 @@
+import { checkMouseCollision } from "./checkMouseCollision";
+import { checkWallsCollision } from "./checkWallsCollision";
+
 export const checkCollision = (
-  heroY: number,
   heroX: number,
-  mouseY: number,
-  mouseX: number,
+  heroY: number,
   speed: number,
-  canvasHeight: number,
   radius: number,
-  mouseRadius: number = 5,
-  boundaryThickness: number = 5
-): number => {
-  if (heroY + speed > canvasHeight - radius || heroY + speed < 0 + radius) {
-    return -speed;
-  }
-  const distanceToMouse = Math.sqrt(
-    (heroX - mouseX) ** 2 + (heroY - mouseY) ** 2
+  mouseX: number,
+  mouseY: number,
+  height: number
+): boolean => {
+  return (
+    checkWallsCollision(heroY, speed, radius, height) ||
+    checkMouseCollision(heroX, heroY, radius, mouseX, mouseY)
   );
-  if (
-    distanceToMouse >= radius - boundaryThickness &&
-    distanceToMouse <= radius + mouseRadius
-  ) {
-    return -speed;
-  }
-  return speed;
 };
